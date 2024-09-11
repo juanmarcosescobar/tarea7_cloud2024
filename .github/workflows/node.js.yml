@@ -32,16 +32,28 @@ jobs:
       - name: Compress Files
         run: cd dist/tarea7_cloud2024 && zip -r build.zip . && cd ../..
 
-      # Crear un draft release usando la CLI de GitHub
       - name: Create Draft Release
-        run: gh release create tarea7.${{ github.sha }} ./dist/tarea7_cloud2024/build.zip -t "Tarea 7 Cloud ${{ github.sha }}" -d -R ${{ github.repository }}
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Publicar el release
-      - name: Publish Release
-        run: gh release publish tarea7.${{ github.sha }} -R ${{ github.repository }}
+        with:
+          tag_name: tarea7.${{ github.sha }}
+          release_name: Tarea 7 Cloud ${{ github.sha }}
+          draft: true
+          prerelease: false
+  
+      - uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/tarea7_cloud2024/build.zip
+          asset_name: build-${{ github.sha }}.zip
+          asset_content_type: application/zip
+  
+      - uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}
